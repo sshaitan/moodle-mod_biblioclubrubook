@@ -14,11 +14,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
-* Book from znanium.com module
+* Book from biblioclub.ru module
 *
-* @package mod_znaniumcombook
-* @copyright 2020 Vadim Dvorovenko
-* @copyright 2020 ООО «ЗНАНИУМ»
+* @package mod_biblioclubrubook
+* @copyright 2022 Pavel Lobanov
+* @copyright 2022 ООО «НексМедиа»
 * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 */
 

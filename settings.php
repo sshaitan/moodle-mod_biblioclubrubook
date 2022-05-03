@@ -15,41 +15,40 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
-    require_once($CFG->dirroot . '/mod/znaniumcombook/lib.php');
+    require_once($CFG->dirroot . '/mod/biblioclubrubook/lib.php');
 
     $settings->add(new admin_setting_heading(
-        'znaniumcombookmodeditdefaults',
+        'biblioclubrubookmodeditdefaults',
         get_string('modeditdefaults', 'admin'),
         get_string('condifmodeditdefaults', 'admin')
     ));
 
     $settings->add(new admin_setting_configcheckbox(
-        'znaniumcombook/showbibliography',
-        get_string('mod_form_show_bibliography', 'znaniumcombook'),
+        'biblioclubrubook/showbibliography',
+        get_string('mod_form_show_bibliography', 'biblioclubrubook'),
         '',
         0
     ));
 
     $bibliographypositions = array(
-        ZNANIUMCOMBOOK_BIBLIOGRAPHY_POSITION_BEFORE => get_string('mod_form_bibliography_position_before', 'znaniumcombook'),
-        ZNANIUMCOMBOOK_BIBLIOGRAPHY_POSITION_AFTER => get_string('mod_form_bibliography_position_after', 'znaniumcombook'),
+        BIBLIOCLUBRUBOOK_BIBLIOGRAPHY_POSITION_BEFORE => get_string('mod_form_bibliography_position_before', 'biblioclubrubook'),
+        BIBLIOCLUBRUBOOK_BIBLIOGRAPHY_POSITION_AFTER => get_string('mod_form_bibliography_position_after', 'biblioclubrubook'),
     );
     $settings->add(new admin_setting_configselect(
-        'znaniumcombook/bibliographyposition',
-        get_string('mod_form_bibliography_position', 'znaniumcombook'),
+        'biblioclubrubook/bibliographyposition',
+        get_string('mod_form_bibliography_position', 'biblioclubrubook'),
         '',
-        ZNANIUMCOMBOOK_BIBLIOGRAPHY_POSITION_BEFORE,
+        BIBLIOCLUBRUBOOK_BIBLIOGRAPHY_POSITION_BEFORE,
         $bibliographypositions
     ));
 }

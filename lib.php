@@ -15,18 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 defined('MOODLE_INTERNAL') || die;
 
-define('ZNANIUMCOMBOOK_BIBLIOGRAPHY_POSITION_BEFORE', 0);
-define('ZNANIUMCOMBOOK_BIBLIOGRAPHY_POSITION_AFTER', 1);
+define('BIBLIOCLUBRUBOOK_BIBLIOGRAPHY_POSITION_BEFORE', 0);
+define('BIBLIOCLUBRUBOOK_BIBLIOGRAPHY_POSITION_AFTER', 1);
 
 require_once($CFG->libdir . '/completionlib.php');
 
@@ -36,7 +36,7 @@ require_once($CFG->libdir . '/completionlib.php');
  * @param string $feature FEATURE_xx constant for requested feature
  * @return bool|null True if module supports feature, false if not, null if doesn't know
  */
-function znaniumcombook_supports($feature) {
+function biblioclubrubook_supports($feature) {
     switch ($feature) {
         case FEATURE_MOD_ARCHETYPE:
             return MOD_ARCHETYPE_RESOURCE;
@@ -68,7 +68,7 @@ function znaniumcombook_supports($feature) {
  * @param object $data the data submitted from the reset course.
  * @return array status array
  */
-function znaniumcombook_reset_userdata($data) {
+function biblioclubrubook_reset_userdata($data) {
     return array();
 }
 
@@ -79,13 +79,14 @@ function znaniumcombook_reset_userdata($data) {
  * @param object $mform
  * @return int new module instance id
  */
-function znaniumcombook_add_instance($data, $mform) {
+function biblioclubrubook_add_instance($data, $mform) {
     global $CFG, $DB;
-
-    $config = get_config('znaniumcombook');
+	$config = get_config('biblioclubrubook');
 
     $data->bookid = $data->book['id'];
     $data->bookdescription = $data->book['description'];
+	$data->bookcover = $data->book['cover'];
+	$data->bookbiblio = $data->book['biblio'];
     unset($data->book);
     $data->bookpage = $data->page;
     $data->timemodified = time();
@@ -95,7 +96,7 @@ function znaniumcombook_add_instance($data, $mform) {
     if (!isset($data->bibliographyposition)) {
         $data->bibliographyposition = $config->bibliographyposition;
     }
-    $data->id = $DB->insert_record('znaniumcombook', $data);
+    $data->id = $DB->insert_record('biblioclubrubook', $data);
 
     $completiontimeexpected = !empty($data->completionexpected) ? $data->completionexpected : null;
     if ($CFG->version > 2017051500.00) {
@@ -111,23 +112,24 @@ function znaniumcombook_add_instance($data, $mform) {
  * @param object $mform
  * @return bool true
  */
-function znaniumcombook_update_instance($data, $mform) {
+function biblioclubrubook_update_instance($data, $mform) {
     global $CFG, $DB;
 
-    $config = get_config('znaniumcombook');
-
+    $config = get_config('biblioclubrubook');
     $data->bookid = $data->book['id'];
     $data->bookdescription = $data->book['description'];
+    $data->bookcover = $data->book['cover'];
+    $data->bookbiblio = $data->book['biblio'];
     unset($data->book);
     $data->bookpage = $data->page;
     $data->timemodified = time();
     $data->id = $data->instance;
 
-    $DB->update_record('znaniumcombook', $data);
+    $DB->update_record('biblioclubrubook', $data);
 
     $completiontimeexpected = !empty($data->completionexpected) ? $data->completionexpected : null;
     if ($CFG->version > 2017051500.00) {
-        \core_completion\api::update_completion_date_event($data->coursemodule, 'znaniumcombook',
+        \core_completion\api::update_completion_date_event($data->coursemodule, 'biblioclubrubook',
             $data->id, $completiontimeexpected);
     }
 
@@ -139,20 +141,20 @@ function znaniumcombook_update_instance($data, $mform) {
  * @param int $id
  * @return bool true
  */
-function znaniumcombook_delete_instance($id) {
+function biblioclubrubook_delete_instance($id) {
     global $CFG, $DB;
 
-    if (!$book = $DB->get_record('znaniumcombook', array('id' => $id))) {
+    if (!$book = $DB->get_record('biblioclubrubook', array('id' => $id))) {
         return false;
     }
 
-    $cm = get_coursemodule_from_instance('znaniumcombook', $id);
+    $cm = get_coursemodule_from_instance('biblioclubrubook', $id);
     if ($CFG->version > 2017051500.00) {
-        \core_completion\api::update_completion_date_event($cm->id, 'znaniumcombook', $id, null);
+        \core_completion\api::update_completion_date_event($cm->id, 'biblioclubrubook', $id, null);
     }
 
     // All context files are deleted automatically.
-    $DB->delete_records('znaniumcombook', array('id' => $id));
+    $DB->delete_records('biblioclubrubook', array('id' => $id));
 
     return true;
 }
@@ -167,35 +169,48 @@ function znaniumcombook_delete_instance($id) {
  * @param object $coursemodule
  * @return cached_cm_info info
  */
-function znaniumcombook_get_coursemodule_info($coursemodule) {
+function biblioclubrubook_get_coursemodule_info($coursemodule) {
     global $DB;
 
-    if (!$book = $DB->get_record('znaniumcombook', array('id' => $coursemodule->instance),
-        'id, name, intro, introformat, bookdescription, showbibliography, bibliographyposition')
+    if (!$book = $DB->get_record('biblioclubrubook', array('id' => $coursemodule->instance),
+        'id, name, intro, introformat, bookdescription, bookbiblio, bookcover,
+         showbibliography, bibliographyposition, showcover')
     ) {
         return null;
     }
-
     $info = new cached_cm_info();
-    $info->name = $book->name;
+	
 
+    $info->name = $book->name;
     $info->icon = '';
-    $fullurl = new moodle_url('/mod/znaniumcombook/view.php', array(
+    $fullurl = new moodle_url('/mod/biblioclubrubook/view.php', array(
         'id' => $coursemodule->id,
     ));
     $info->onclick = "window.open('$fullurl'); return false;";
     $info->url = $fullurl;
 
     $info->content = '';
-    if ($book->showbibliography && $book->bibliographyposition == ZNANIUMCOMBOOK_BIBLIOGRAPHY_POSITION_BEFORE) {
-        $info->content .= '<div>' . htmlentities($book->bookdescription) . '</div>';
+	
+    if ($book->showbibliography && $book->bibliographyposition == BIBLIOCLUBRUBOOK_BIBLIOGRAPHY_POSITION_BEFORE) {
+		if ($book->showcover){
+			$info->content .= '<div style="display: flex; gap: 10px;"><div><img src="'.$book->bookcover.
+				'" alt="'.$book->bookdescription.'"/></div><div>' .($book->bookbiblio) . '</div></div>';		
+		} else {
+			$info->content .= '<div>' .($book->bookbiblio) . '</div>';	
+		}
     }
     if ($coursemodule->showdescription) {
         // Convert intro to html. Do not filter cached version, filters run at display time.
-        $info->content .= format_module_intro('znaniumcombook', $book, $coursemodule->id, false);
+        $info->content .= format_module_intro('biblioclubrubook', $book, $coursemodule->id, false);
     }
-    if ($book->showbibliography && $book->bibliographyposition == ZNANIUMCOMBOOK_BIBLIOGRAPHY_POSITION_AFTER) {
-        $info->content .= '<div>' . htmlentities($book->bookdescription) . '</div>';
+    if ($book->showbibliography && $book->bibliographyposition == BIBLIOCLUBRUBOOK_BIBLIOGRAPHY_POSITION_AFTER) {
+	    if ($book->showcover){
+		    $info->content .= '<div style="display: flex; gap: 10px;"><div><img src="'.$book->bookcover.
+			    '" alt="'.$book->bookdescription.'"/></div><div>' .($book->bookbiblio) . '</div></div>';
+	    } else {
+		    $info->content .= '<div>' .($book->bookbiblio) . '</div>';
+	    }
+
     }
 
     return $info;
@@ -207,7 +222,7 @@ function znaniumcombook_get_coursemodule_info($coursemodule) {
  * @param stdClass $parentcontext Block's parent context
  * @param stdClass $currentcontext Current context of block
  */
-function znaniumcombook_page_type_list($pagetype, $parentcontext, $currentcontext) {
+function biblioclubrubook_page_type_list($pagetype, $parentcontext, $currentcontext) {
     return array();
 }
 
@@ -218,15 +233,15 @@ function znaniumcombook_page_type_list($pagetype, $parentcontext, $currentcontex
  * @param  string $baseurl Base URL for file downloads
  * @return array of file content
  */
-function znaniumcombook_export_contents($cm, $baseurl) {
+function biblioclubrubook_export_contents($cm, $baseurl) {
     global $CFG, $DB;
     $contents = array();
     $context = context_module::instance($cm->id);
 
     $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-    $book = $DB->get_record('znaniumcombook', array('id' => $cm->instance), '*', MUST_EXIST);
+    $book = $DB->get_record('biblioclubrubook', array('id' => $cm->instance), '*', MUST_EXIST);
 
-    if (!has_capability('mod/znaniumcombook:view', $context)) {
+    if (!has_capability('mod/biblioclubrubook:view', $context)) {
         return array();
     };
 
@@ -237,7 +252,7 @@ function znaniumcombook_export_contents($cm, $baseurl) {
     if ($book->bookpage) {
         $params['page'] = $book->bookpage;
     }
-    $url = new moodle_url('/blocks/znanium_com/redirect.php', $params);
+    $url = new moodle_url('/blocks/biblioclub_ru/redirect.php', $params);
 
     $file = array();
     $file['type'] = 'url';
@@ -252,20 +267,19 @@ function znaniumcombook_export_contents($cm, $baseurl) {
     $file['author'] = null;
     $file['license'] = null;
     $contents[] = $file;
-
     return $contents;
 }
 
 /**
  * Mark the activity completed (if required) and trigger the course_module_viewed event.
  *
- * @param  stdClass $instance   znaniumcombook object
+ * @param  stdClass $instance   biblioclubrubook object
  * @param  stdClass $course     course object
  * @param  stdClass $cm         course module object
  * @param  stdClass $context    context object
  * @since Moodle 3.0
  */
-function znaniumcombook_view($instance, $course, $cm, $context) {
+function biblioclubrubook_view($instance, $course, $cm, $context) {
 
     // Trigger course_module_viewed event.
     $params = array(
@@ -273,10 +287,10 @@ function znaniumcombook_view($instance, $course, $cm, $context) {
         'objectid' => $instance->id
     );
 
-    $event = \mod_znaniumcombook\event\course_module_viewed::create($params);
+    $event = \mod_biblioclubrubook\event\course_module_viewed::create($params);
     $event->add_record_snapshot('course_modules', $cm);
     $event->add_record_snapshot('course', $course);
-    $event->add_record_snapshot('znaniumcombook', $instance);
+    $event->add_record_snapshot('biblioclubrubook', $instance);
     $event->trigger();
 
     // Completion.
@@ -293,7 +307,7 @@ function znaniumcombook_view($instance, $course, $cm, $context) {
  * @return stdClass an object with the different type of areas indicating if they were updated or not
  * @since Moodle 3.2
  */
-function znaniumcombook_check_updates_since(cm_info $cm, $from, $filter = array()) {
+function biblioclubrubook_check_updates_since(cm_info $cm, $from, $filter = array()) {
     $updates = course_check_module_updates_since($cm, $from, array('content'), $filter);
     return $updates;
 }

@@ -15,37 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
 /**
- * Print znaniumcombook info and workaround link when JS not available.
+ * Print biblioclubrubook info and workaround link when JS not available.
  * @param object $book
  * @param object $cm
  * @param object $course
- * @param moodle_url $url
+ * @param array $ub_links
  * @return does not return
  */
-function znaniumcombook_print_workaround($book, $cm, $course, $url) {
+function biblioclubrubook_print_workaround($book, $cm, $course, $ub_links) {
     global $OUTPUT;
-
-    znaniumcombook_print_header($book, $cm, $course);
-    znaniumcombook_print_heading($book, $cm, $course);
-    znaniumcombook_print_intro($book, $cm, $course);
+	
+	biblioclubrubook_print_header($book, $cm, $course);
+	biblioclubrubook_print_heading($book, $cm, $course);
+	biblioclubrubook_print_intro($book, $cm, $course);
 
     echo html_writer::start_div('text-center');
-    echo html_writer::tag('a', get_string('clicktoopen', 'znaniumcombook'), array (
-        'href' => $url,
-        'class' => 'btn btn-primary',
-        'target' => '_blank'
-    ));
+	echo $ub_links['view'];
     echo html_writer::end_div();
 
     echo $OUTPUT->footer();
@@ -53,41 +48,41 @@ function znaniumcombook_print_workaround($book, $cm, $course, $url) {
 }
 
 /**
- * Print znaniumcombook header.
- * @param object $znaniumcombook
+ * Print biblioclubrubook header.
+ * @param object $biblioclubrubook
  * @param object $cm
  * @param object $course
  * @return void
  */
-function znaniumcombook_print_header($znaniumcombook, $cm, $course) {
+function biblioclubrubook_print_header($biblioclubrubook, $cm, $course) {
     global $PAGE, $OUTPUT;
 
-    $PAGE->set_title($course->shortname.': '.$znaniumcombook->name);
+    $PAGE->set_title($course->shortname.': '.$biblioclubrubook->name);
     $PAGE->set_heading($course->fullname);
-    $PAGE->set_activity_record($znaniumcombook);
+    $PAGE->set_activity_record($biblioclubrubook);
     echo $OUTPUT->header();
 }
 
 /**
- * Print znaniumcombook heading.
- * @param object $znaniumcombook
+ * Print biblioclubrubook heading.
+ * @param object $biblioclubrubook
  * @param object $cm
  * @param object $course
  * @return void
  */
-function znaniumcombook_print_heading($znaniumcombook, $cm, $course) {
+function biblioclubrubook_print_heading($biblioclubrubook, $cm, $course) {
     global $OUTPUT;
-    echo $OUTPUT->heading(format_string($znaniumcombook->name), 2);
+    echo $OUTPUT->heading(format_string($biblioclubrubook->name), 2);
 }
 
 /**
- * Print znaniumcombook introduction.
+ * Print biblioclubrubook introduction.
  * @param object $book
  * @param object $cm
  * @param object $course
  * @return void
  */
-function znaniumcombook_print_intro($book, $cm, $course) {
+function biblioclubrubook_print_intro($book, $cm, $course) {
     global $OUTPUT;
 
     $modinfo = get_fast_modinfo($course);
@@ -95,7 +90,7 @@ function znaniumcombook_print_intro($book, $cm, $course) {
     $cminfo = $modinfo->cms[$cm->id];
     $intro = $cminfo->content;
     if ($intro) {
-        echo $OUTPUT->box_start('mod_introbox', 'znaniumcombookintro');
+        echo $OUTPUT->box_start('mod_introbox', 'biblioclubrubookintro');
         echo $intro;
         echo $OUTPUT->box_end();
     }

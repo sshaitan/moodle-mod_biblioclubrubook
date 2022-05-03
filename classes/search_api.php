@@ -15,91 +15,80 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_znaniumcombook;
+
+namespace mod_biblioclubrubook;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-require_once($CFG->libdir . '/filelib.php');
 
+require_once($CFG->libdir . '/filelib.php');
+require_once("$CFG->dirroot/mod/biblioclubrubook/classes/ub_api.php");
 /**
  * Search api class
  */
-class search_api extends \external_api {
-
-    /**
-     * @var string
-     */
-    private static $searchurl = 'https://znanium.com/api/search';
-
-    /**
-     * @var string
-     */
-    private static $infourl = 'https://znanium.com/api/getinfo';
-
-    /**
-     * Returns description of method parameters
-     * @return \external_function_parameters
-     */
-    public static function search_books_parameters() {
-        return new \external_function_parameters(array(
-            'searchquery' => new \external_value(PARAM_TEXT, 'Search query', VALUE_REQUIRED),
-            'page' => new \external_value(PARAM_INT, 'Results page', VALUE_DEFAULT, 0),
-        ));
-    }
-
-    /**
-     * Returns description of method parameters
-     * @return \external_description
-     */
-    public static function search_books_returns() {
-        return new \external_multiple_structure(
-            new \external_single_structure(array())
-        );
-    }
-
-    /**
-     * Searches for book
-     *
-     * @param string $searchquery
-     * @param int $page
-     * @return array
-     */
-    public static function search_books($searchquery, $page = 0) {
-        $domain = get_config('block_znanium_com', 'domain');
-        $curl = new \curl(array('cache' => true, 'module_cache' => 'repository_znanium_com'));
-
-        $params = array(
-            'searchQuery' => $searchquery,
-            'domain' => $domain,
-        );
-        if ($page) {
-            $params['page'] = $page;
-        }
-        $json = $curl->get(static::$searchurl, $params);
-        return json_decode($json, true);
-    }
-
-    /**
-     * Clean response
-     * If a response attribute is unknown from the description, we just ignore the attribute.
-     * If a response attribute is incorrect, invalid_response_exception is thrown.
-     * Note: this function is similar to validate parameters, however it is distinct because
-     * parameters validation must be distinct from cleaning return values.
-     *
-     * @param external_description $description description of the return values
-     * @param mixed $response the actual response
-     * @return mixed response with added defaults for optional items, invalid_response_exception thrown if any problem found
-     */
-    public static function clean_returnvalue(\external_description $description, $response) {
-        return $response;
-    }
+class search_api extends \external_api
+{
+	
+	
+	/**
+	 * Returns description of method parameters
+	 * @return \external_function_parameters
+	 */
+	public static function search_books_parameters()
+	{
+		return new \external_function_parameters(array(
+			'searchquery' => new \external_value(PARAM_TEXT, 'Search query', VALUE_REQUIRED),
+			'page' => new \external_value(PARAM_INT, 'Results page', VALUE_DEFAULT, 0),
+		));
+	}
+	
+	/**
+	 * Returns description of method parameters
+	 * @return \external_description
+	 */
+	public static function search_books_returns()
+	{
+		return new \external_multiple_structure(
+			new \external_single_structure(array())
+		);
+	}
+	
+	/**
+	 * Searches for book
+	 *
+	 * @param string $searchquery
+	 * @param int $page
+	 * @return array
+	 */
+	public static function search_books($searchquery, $page = 0)
+	{
+		$cookie = \ub_api::get_auth_cookie();
+		
+		return \ub_api::searchRequest($cookie, $searchquery, $page);
+		
+	}
+	
+	/**
+	 * Clean response
+	 * If a response attribute is unknown from the description, we just ignore the attribute.
+	 * If a response attribute is incorrect, invalid_response_exception is thrown.
+	 * Note: this function is similar to validate parameters, however it is distinct because
+	 * parameters validation must be distinct from cleaning return values.
+	 *
+	 * @param external_description $description description of the return values
+	 * @param mixed $response the actual response
+	 * @return mixed response with added defaults for optional items, invalid_response_exception thrown if any problem found
+	 */
+	public static function clean_returnvalue(\external_description $description, $response)
+	{
+		return $response;
+	}
 }

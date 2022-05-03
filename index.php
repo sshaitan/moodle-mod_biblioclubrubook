@@ -15,11 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -35,28 +34,27 @@ $PAGE->set_pagelayout('incourse');
 $params = array(
     'context' => context_course::instance($course->id)
 );
-$event = \mod_znaniumcombook\event\course_module_instance_list_viewed::create($params);
+$event = \mod_biblioclubrubook\event\course_module_instance_list_viewed::create($params);
 $event->add_record_snapshot('course', $course);
 $event->trigger();
 
-$strurl       = get_string('modulename', 'znaniumcombook');
-$strurls      = get_string('modulenameplural', 'znaniumcombook');
+$strurl       = get_string('modulename', 'biblioclubrubook');
+$strurls      = get_string('modulenameplural', 'biblioclubrubook');
 $strname         = get_string('name');
 $strintro        = get_string('moduleintro');
 $strlastmodified = get_string('lastmodified');
 
-$PAGE->set_url('/mod/znaniumcombook/index.php', array('id' => $course->id));
+$PAGE->set_url('/mod/biblioclubrubook/index.php', array('id' => $course->id));
 $PAGE->set_title($course->shortname.': '.$strurls);
 $PAGE->set_heading($course->fullname);
 $PAGE->navbar->add($strurls);
 echo $OUTPUT->header();
 echo $OUTPUT->heading($strurls);
 
-if (!$books = get_all_instances_in_course('znaniumcombook', $course)) {
+if (!$books = get_all_instances_in_course('biblioclubrubook', $course)) {
     notice(get_string('thereareno', 'moodle', $strurls), "$CFG->wwwroot/course/view.php?id=$course->id");
     exit;
 }
-
 $usesections = course_format_uses_sections($course->format);
 
 $table = new html_table();
@@ -100,7 +98,7 @@ foreach ($books as $book) {
     $table->data[] = array (
         $printsection,
         "<a $class $extra href=\"view.php?id=$cm->id\">".$icon.format_string($book->name)."</a>",
-        format_module_intro('znaniumcombook', $book, $cm->id));
+        format_module_intro('biblioclubrubook', $book, $cm->id));
 }
 
 echo html_writer::table($table);

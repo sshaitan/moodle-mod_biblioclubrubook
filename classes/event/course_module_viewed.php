@@ -15,15 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_znaniumcombook\event;
+
+namespace mod_biblioclubrubook\event;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -38,7 +38,7 @@ class course_module_viewed extends \core\event\course_module_viewed {
      * @return void
      */
     protected function init() {
-        $this->data['objecttable'] = 'znaniumcombook';
+        $this->data['objecttable'] = 'biblioclubrubook';
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
     }
@@ -71,6 +71,6 @@ class course_module_viewed extends \core\event\course_module_viewed {
      * @return array
      */
     public static function get_objectid_mapping() {
-        return array('db' => 'znaniumcombook', 'restore' => 'znaniumcombook');
+        return array('db' => 'biblioclubrubook', 'restore' => 'biblioclubrubook');
     }
 }

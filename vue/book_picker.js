@@ -14,11 +14,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
+ * @copyright 2022 ООО «НексМедиа»
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -34,6 +34,8 @@ export function init() {
     const bookIdSelector = '#id_book_id';
     const bookDescriptionSelector = '#id_book_description';
     const buttonSelector = '#id_book_select';
+    const bookBiblio = '#id_book_biblio';
+    const bookCover = '#id_book_cover';
 
     let appElement = $(bookIdSelector).closest('form').get(0);
 
@@ -69,9 +71,13 @@ export function init() {
         beforeMount: function() {
             let id = $(bookIdSelector).val();
             let biblio_record = $(bookDescriptionSelector).val();
+            let biblio = $(bookBiblio).val();
+            let cover = $(bookCover).val();
             this.$store.commit('setSelectedBook', {
                 id,
-                biblio_record
+                biblio_record,
+                cover,
+                biblio
             });
         },
         mounted: function () {

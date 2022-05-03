@@ -15,53 +15,77 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 require('../../config.php');
-require_once("$CFG->dirroot/mod/znaniumcombook/lib.php");
-require_once("$CFG->dirroot/mod/znaniumcombook/locallib.php");
+require_once("$CFG->dirroot/mod/biblioclubrubook/lib.php");
+require_once("$CFG->dirroot/mod/biblioclubrubook/locallib.php");
+require_once("$CFG->dirroot/mod/biblioclubrubook/classes/ub_api.php");
+
+function error_redirect_handler($bookId){
+	
+	$url = new moodle_url(\ub_api::$authurl, [
+		'page' => 'book_red',
+		'id' => intval($bookId)
+	]);
+	redirect($url);
+}
 
 $id = required_param('id', PARAM_INT); // Course module ID.
 $forceview = optional_param('forceview', 0, PARAM_BOOL);
 
-$cm = get_coursemodule_from_id('znaniumcombook', $id, 0, false, MUST_EXIST);
-$book = $DB->get_record('znaniumcombook', array('id' => $cm->instance), '*', MUST_EXIST);
+$cm = get_coursemodule_from_id('biblioclubrubook', $id, 0, false, MUST_EXIST);
+$book = $DB->get_record('biblioclubrubook', array('id' => $cm->instance), '*', MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
 require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
-require_capability('mod/znaniumcombook:view', $context);
+require_capability('mod/biblioclubrubook:view', $context);
 
 // Completion and trigger events.
-znaniumcombook_view($book, $course, $cm, $context);
+biblioclubrubook_view($book, $course, $cm, $context);
 
-$PAGE->set_url('/mod/znaniumcombook/view.php', array('id' => $cm->id));
+$PAGE->set_url('/mod/biblioclubrubook/view.php', array('id' => $cm->id));
 
 $params = array(
-    'contextid' => $context->id,
-    'documentid' => $book->bookid,
+	'contextid' => $context->id,
+	'documentid' => $book->bookid,
 );
 if ($book->bookpage) {
-    $params['page'] = $book->bookpage;
+	$params['page'] = $book->bookpage;
+}
+
+// подгружаем ссылки на просмотр
+$cookie = \ub_api::get_auth_cookie();
+if (empty($cookie)) {
+	// что-то не так с аутентификацией
+	error_redirect_handler($book->bookid);
+}
+
+$ub_links = \ub_api::getLinks($cookie, $book->bookid, $book->bookpage);
+
+if (empty($ub_links)){
+	// не удалось получить ссылки
+	error_redirect_handler($book->bookid);
 }
 
 if (!course_get_format($course)->has_view_page()) {
-    if (has_capability('moodle/course:manageactivities', $context)
-        || has_capability('moodle/course:update', $context->get_course_context())
-    ) {
-        $forceview = true;
-    }
+	if (has_capability('moodle/course:manageactivities', $context)
+		|| has_capability('moodle/course:update', $context->get_course_context())
+	) {
+		$forceview = true;
+	}
 }
 
-$url = new moodle_url('/blocks/znanium_com/redirect.php', $params);
+$url = new moodle_url('https:'.$ub_links['url']);
 if (!$forceview) {
-    redirect($url);
+	redirect($url);
 }
 
-znaniumcombook_print_workaround($book, $cm, $course, $url);
+biblioclubrubook_print_workaround($book, $cm, $course, $ub_links);

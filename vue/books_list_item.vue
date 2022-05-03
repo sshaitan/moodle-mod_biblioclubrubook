@@ -14,11 +14,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
-* Book from znanium.com module
+* Book from biblioclub.ru module
 *
-* @package mod_znaniumcombook
-* @copyright 2020 Vadim Dvorovenko
-* @copyright 2020 ООО «ЗНАНИУМ»
+* @package mod_biblioclubrubook
+* @copyright 2022 Pavel Lobanov
+* @copyright 2022 ООО «НексМедиа»
 * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 */
 
@@ -27,7 +27,13 @@
         <div class="col-auto">
             <img :src="publication.cover" :alt="strings.cover_alt" class="border border-dark"/>
         </div>
-        <div class="col" v-text="publication.biblio_record"></div>
+      <div class="col book-info">
+        <div class="book-title">
+          <span class="book-author" v-html="publication.author"></span>
+          <span class="book-cname" v-html="publication.cname"></span>
+        </div>
+        <div class="book-biblio" v-html="publication.biblio_record"></div>
+      </div>
         <div class="col-auto">
             <button
                     class="btn btn-primary"

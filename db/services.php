@@ -15,19 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+
 
 defined('MOODLE_INTERNAL') || die;
 
 $functions = array(
-    'mod_znaniumcombook_search' => array(
-        'classname' => 'mod_znaniumcombook\search_api',
+    'mod_biblioclubrubook_search' => array(
+        'classname' => 'mod_biblioclubrubook\search_api',
         'methodname' => 'search_books',
         'description' => 'Search books',
         'type' => 'read',

@@ -14,16 +14,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
-* Book from znanium.com module
+* Book from biblioclub.ru module
 *
-* @package mod_znaniumcombook
-* @copyright 2020 Vadim Dvorovenko
-* @copyright 2020 ООО «ЗНАНИУМ»
+* @package mod_biblioclubrubook
+* @copyright 2022 Pavel Lobanov
+* @copyright 2022 ООО «НексМедиа»
 * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 */
 
 <template>
-    <div class="znaniumcombook_book_picker_modal_body">
+    <div class="biblioclubrubook_book_picker_modal_body">
         <search-form></search-form>
         <div v-if="searchError" class="text-center text-danger" v-text="strings.search_error"></div>
         <div v-else-if="searching" class="text-center"  v-text="strings.searching"></div>

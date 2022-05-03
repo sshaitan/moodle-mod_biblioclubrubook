@@ -15,21 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'mod_znaniumcombook';  // Full name of the plugin.
-$plugin->version = 2021011000; // The current module version (Date: YYYYMMDDXX)
+$plugin->component = 'mod_biblioclubrubook';  // Full name of the plugin.
+$plugin->version = 2022042000; // The current module version (Date: YYYYMMDDXX)
 $plugin->requires = 2016120500; // Requires Moodle 3.2.
 $plugin->maturity = MATURITY_STABLE; // Maturity level of this plugin version.
-$plugin->release = '2021-01-10'; // Human readable version name.
+$plugin->release = '2022-04-20'; // Human readable version name.
 $plugin->dependencies = array(
-    'block_znanium_com' => 2020060602,
+    'block_biblioclub_ru' => 2020083102,
 );

@@ -15,18 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 
 defined('MOODLE_INTERNAL') || die;
 
 $capabilities = array(
-    'mod/znaniumcombook:view' => array(
+    'mod/biblioclubrubook:view' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
@@ -35,7 +35,7 @@ $capabilities = array(
         )
     ),
 
-    'mod/znaniumcombook:addinstance' => array(
+    'mod/biblioclubrubook:addinstance' => array(
         'riskbitmask' => RISK_XSS,
 
         'captype' => 'write',
