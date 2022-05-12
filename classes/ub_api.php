@@ -18,7 +18,7 @@ class ub_api
 	 * @var string
 	 */
 	private static $booksInfo = BASE_URL . '/services/service.php?page=books&m=GetShortInfo_S&pjson&out=json';
-
+	
 	/**
 	 * @var string
 	 */
@@ -28,12 +28,12 @@ class ub_api
 	 * @var string
 	 */
 	private static $biblioDescs = BASE_URL . '/services/service.php?page=books&m=GetLibDescs&pjson&out=json';
-
+	
 	/**
 	 * @var string
 	 */
 	private static $me = BASE_URL . '/services/users.php?users_action=check_auth';
-
+	
 	/**
 	 * @var string
 	 */
@@ -157,7 +157,7 @@ class ub_api
 			CURLOPT_TIMEOUT => static::$requestTimeout,
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_CUSTOMREQUEST => (empty($jsonQuery)) ? 'GET' : 'POST',
-			CURLOPT_POSTFIELDS => (empty($jsonQuery))  ? null : 'p=' . json_encode($jsonQuery),
+			CURLOPT_POSTFIELDS => (empty($jsonQuery)) ? null : 'p=' . json_encode($jsonQuery),
 			CURLOPT_HTTPHEADER => array(
 				'Content-Type: application/x-www-form-urlencoded',
 				'Cookie: PHPSESSID=' . $cookie
@@ -256,9 +256,9 @@ class ub_api
 			'id' => $bookId,
 			'fields' => $fields
 		]);
-
+		
 		if (empty($bookInfo) || (isset($bookInfo['data']) && $bookInfo['data'] === 'false')) return null;
-
+		
 		return $bookInfo;
 		
 	}
@@ -273,7 +273,7 @@ class ub_api
 	}
 	
 	
-	public static function getLinks(string $cookie, int $bookId, string $page) : ?array
+	public static function getLinks(string $cookie, int $bookId, string $page): ?array
 	{
 		
 		if (empty($cookie) || empty($bookId)) return null;
@@ -283,7 +283,7 @@ class ub_api
 		if (empty($bookPages) || !count($bookPages)) return null;
 		$totalBookPages = intval($bookPages[0]['pages']);
 		
-		if (empty($page)){
+		if (empty($page)) {
 			// если пусто - подгружаем страницы книги
 			$pagesArray = [
 				'from' => 1,
@@ -291,48 +291,30 @@ class ub_api
 			];
 		}
 		
-		if (is_numeric($page) && $page != 0){
+		if (is_numeric($page) && $page != 0) {
 			// судя по всему юзер хочет посмотреть конкретную страницу
 			$page = intval($page);
-			if ($page > $totalBookPages){
+			if ($page > $totalBookPages) {
 				$page = $totalBookPages;
 			}
-			// FIXME: в УБ баг, который пока не позволяет показывать одну страницу...
 			
-			switch ($page){
-				case 1:
-					$pagesArray = [
-						'from' => 1,
-						'to' => 2
-					];
-					break;
-				case $totalBookPages:
-					$pagesArray = [
-						'from' => $totalBookPages -1,
-						'to' => $totalBookPages
-					];
-					break;
-					
-				default:
-					$pagesArray = [
-						'from' => $page -1,
-						'to' => $page
-					];
-					break;
-			}
+			$pagesArray = [
+				'from' => $page,
+				'to' => $page
+			];
 		}
 		
-		if (mb_strpos($page, '-') !== false){
+		if (mb_strpos($page, '-') !== false) {
 			// пользователь указал диапазон страниц
 			$pages = explode('-', $page);
-			if (count($pages) != 2){
+			if (count($pages) != 2) {
 				// криво задан диапазон страниц, показываем всю книгу
 				$pagesArray = [
 					'from' => 1,
 					'to' => $totalBookPages
 				];
 			} else {
-				if (is_numeric($pages[0]) && is_numeric($pages[1])){
+				if (is_numeric($pages[0]) && is_numeric($pages[1])) {
 					// здесь - все правильно показываем только диапазон страниц
 					$pagesArray = [
 						'from' => intval($pages[0]),
@@ -353,7 +335,7 @@ class ub_api
 		if (empty($pagesArray)) return null;
 		
 		$paramsArray = array_merge(['id' => $bookId, 'type' => 'bk_v',
-			'uid' =>$uid, 'domen' => $userDomain], $pagesArray);
+			'uid' => $uid, 'domen' => $userDomain], $pagesArray);
 		
 		$links = static::curlRequest(static::$viewLinks, $cookie, [
 			'links' => [$paramsArray]
