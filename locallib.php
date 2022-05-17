@@ -47,6 +47,24 @@ function biblioclubrubook_print_workaround($book, $cm, $course, $ub_links) {
     die;
 }
 
+
+function biblioclubrubook_forced_newpage_workaround($book, $cm, $course, $ub_links)
+{
+	global $OUTPUT;
+	
+	$link = 'https:'.$ub_links['url'];
+	$title = get_string('mod_newpage_loading_title', 'biblioclubrubook');
+	$description = get_string('mod_newpage_loading_description', 'biblioclubrubook');
+	$copyright = get_string('mod_newpage_copyright', 'biblioclubrubook');
+	echo $OUTPUT->render_from_template('biblioclubrubook/newpage', [
+		'name' => $link,
+		'title' => $title,
+		'description' => $description,
+		'copyright' => $copyright
+	]);
+	die;
+}
+
 /**
  * Print biblioclubrubook header.
  * @param object $biblioclubrubook

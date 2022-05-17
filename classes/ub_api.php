@@ -54,7 +54,7 @@ class ub_api
 	 */
 	private static $onPage = 30;
 	
-	public static function buildAuthParams(): array
+	public static function buildAuthParams() 
 	{
 		global $USER;
 		$domain = get_config('block_biblioclub_ru', 'domain');
@@ -92,7 +92,7 @@ class ub_api
 	 * @return string
 	 * @throws \dml_exception
 	 */
-	public static function get_auth_cookie(): ?string
+	public static function get_auth_cookie()
 	{
 		$now = new \DateTime("now", new \DateTimeZone('Europe/Moscow'));
 		// проверим код в сессии
@@ -147,7 +147,7 @@ class ub_api
 		return null;
 	}
 	
-	public static function curlRequest(string $url, string $cookie, ?array $jsonQuery = null): ?array
+	public static function curlRequest(string $url, string $cookie, $jsonQuery = null)
 	{
 		$curl = curl_init();
 		curl_setopt_array($curl, array(
@@ -196,7 +196,7 @@ class ub_api
 		return $booksInfo;
 	}
 	
-	public static function searchRequest(string $cookie, string $query, int $page = 0): ?array
+	public static function searchRequest(string $cookie, string $query, int $page = 0)
 	{
 		
 		$meta = [
@@ -248,7 +248,7 @@ class ub_api
 		return $result;
 	}
 	
-	public static function getBookFields(string $cookie, int $bookId, array $fields): ?array
+	public static function getBookFields(string $cookie, int $bookId, array $fields)
 	{
 		if (empty($cookie) || empty($bookId) || empty($fields)) return null;
 		$bookInfo = static::curlRequest(static::$bookFields, $cookie, [
@@ -263,7 +263,7 @@ class ub_api
 		
 	}
 	
-	public static function getUserId(string $cookie): ?int
+	public static function getUserId(string $cookie)
 	{
 		if (empty($cookie)) return null;
 		$res = static::curlRequest(self::$me, $cookie);
@@ -273,7 +273,7 @@ class ub_api
 	}
 	
 	
-	public static function getLinks(string $cookie, int $bookId, string $page): ?array
+	public static function getLinks(string $cookie, int $bookId, string $page)
 	{
 		
 		if (empty($cookie) || empty($bookId)) return null;

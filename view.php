@@ -82,6 +82,11 @@ if (!course_get_format($course)->has_view_page()) {
 		$forceview = true;
 	}
 }
+$config = get_config('biblioclubrubook');
+
+if ($config->forcenewpage){
+	biblioclubrubook_forced_newpage_workaround($book, $cm, $course, $ub_links);
+}
 
 $url = new moodle_url('https:'.$ub_links['url']);
 if (!$forceview) {

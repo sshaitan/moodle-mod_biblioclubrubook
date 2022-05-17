@@ -39,6 +39,12 @@ if ($ADMIN->fulltree) {
         '',
         0
     ));
+    $settings->add(new admin_setting_configcheckbox(
+        'biblioclubrubook/forcenewpage',
+        get_string('mod_form_force_newpage', 'biblioclubrubook'),
+        '',
+        0
+    ));
 
     $bibliographypositions = array(
         BIBLIOCLUBRUBOOK_BIBLIOGRAPHY_POSITION_BEFORE => get_string('mod_form_bibliography_position_before', 'biblioclubrubook'),
