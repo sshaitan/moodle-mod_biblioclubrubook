@@ -15,22 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/mod/znaniumcombook/backup/moodle2/restore_znaniumcombook_stepslib.php');
+require_once($CFG->dirroot . '/mod/biblioclubrubook/backup/moodle2/restore_biblioclubrubook_stepslib.php');
 
 /**
  * Restore task
  */
-class restore_znaniumcombook_activity_task extends restore_activity_task {
+class restore_biblioclubrubook_activity_task extends restore_activity_task {
 
     /**
      * Define (add) particular settings this activity can have
@@ -44,7 +44,7 @@ class restore_znaniumcombook_activity_task extends restore_activity_task {
      */
     protected function define_my_steps() {
         // Module only has one structure step.
-        $this->add_step(new restore_znaniumcombook_activity_structure_step('znaniumcombook_structure', 'znaniumcombook.xml'));
+        $this->add_step(new restore_biblioclubrubook_activity_structure_step('biblioclubrubook_structure', 'biblioclubrubook.xml'));
     }
 
     /**
@@ -54,7 +54,9 @@ class restore_znaniumcombook_activity_task extends restore_activity_task {
     static public function define_decode_contents() {
         $contents = array();
 
-        $contents[] = new restore_decode_content('znaniumcombook', array('intro', 'bookid', 'bookdescription', 'bookpage'));
+        $contents[] = new restore_decode_content('biblioclubrubook',
+	        array('intro', 'bookid', 'bookdescription', 'bookpage', 'showbibliography',
+		        'bibliographyposition', 'bookbiblio', 'bookcover'));
 
         return $contents;
     }
@@ -66,8 +68,8 @@ class restore_znaniumcombook_activity_task extends restore_activity_task {
     static public function define_decode_rules() {
         $rules = array();
 
-        $rules[] = new restore_decode_rule('ZNANIUMCOMBOOKINDEX', '/mod/znaniumcombook/index.php?id=$1', 'course');
-        $rules[] = new restore_decode_rule('ZNANIUMCOMBOOKVIEWBYID', '/mod/znaniumcombook/view.php?id=$1', 'course_module');
+        $rules[] = new restore_decode_rule('BIBLIOCLUBRUBOOKINDEX', '/mod/biblioclubrubook/index.php?id=$1', 'course');
+        $rules[] = new restore_decode_rule('BIBLIOCLUBRUBOOKVIEWBYID', '/mod/biblioclubrubook/view.php?id=$1', 'course_module');
 
         return $rules;
 
@@ -86,8 +88,8 @@ class restore_znaniumcombook_activity_task extends restore_activity_task {
     static public function define_restore_log_rules_for_course() {
         $rules = array();
 
-        $rules[] = new restore_log_rule('znaniumcombook', 'view all', 'index.php?id={course}', null);
-        $rules[] = new restore_log_rule('znaniumcombook', 'view', 'view.php?id={course_module}', '{znaniumcombook}');
+        $rules[] = new restore_log_rule('biblioclubrubook', 'view all', 'index.php?id={course}', null);
+        $rules[] = new restore_log_rule('biblioclubrubook', 'view', 'view.php?id={course_module}', '{biblioclubrubook}');
 
         return $rules;
     }

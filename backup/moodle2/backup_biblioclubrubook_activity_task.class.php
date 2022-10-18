@@ -15,22 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->dirroot . '/mod/znaniumcombook/backup/moodle2/backup_znaniumcombook_stepslib.php');
+require_once($CFG->dirroot . '/mod/biblioclubrubook/backup/moodle2/backup_biblioclubrubook_stepslib.php');
 
 /**
  * Backup task
  */
-class backup_znaniumcombook_activity_task extends backup_activity_task {
+class backup_biblioclubrubook_activity_task extends backup_activity_task {
 
     /**
      * No specific settings for this activity
@@ -42,7 +42,7 @@ class backup_znaniumcombook_activity_task extends backup_activity_task {
      * Define (add) particular steps this activity can have
      */
     protected function define_my_steps() {
-        $this->add_step(new backup_znaniumcombook_activity_structure_step('znaniumcombook_structure', 'znaniumcombook.xml'));
+        $this->add_step(new backup_biblioclubrubook_activity_structure_step('biblioclubrubook_structure', 'biblioclubrubook.xml'));
     }
 
     /**
@@ -54,16 +54,16 @@ class backup_znaniumcombook_activity_task extends backup_activity_task {
     static public function encode_content_links($content) {
         global $CFG;
 
-        $base = preg_quote($CFG->wwwroot . '/mod/znaniumcombook', '#');
+        $base = preg_quote($CFG->wwwroot . '/mod/biblioclubrubook', '#');
 
         // Access a list of all links in a course.
         $pattern = '#('.$base.'/index\.php\?id=)([0-9]+)#';
-        $replacement = '$@ZNANIUMCOMBOOKINDEX*$2@$';
+        $replacement = '$@BIBLIOCLUBRUBOOKINDEX*$2@$';
         $content = preg_replace($pattern, $replacement, $content);
 
         // Access the link supplying a course module id.
         $pattern = '#('.$base.'/view\.php\?id=)([0-9]+)#';
-        $replacement = '$@ZNANIUMCOMBOOKVIEWBYID*$2@$';
+        $replacement = '$@BIBLIOCLUBRUBOOKVIEWBYID*$2@$';
         $content = preg_replace($pattern, $replacement, $content);
 
         return $content;

@@ -15,20 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Book from znanium.com module
+ * Book from biblioclub.ru module
  *
- * @package mod_znaniumcombook
- * @copyright 2020 Vadim Dvorovenko
- * @copyright 2020 ООО «ЗНАНИУМ»
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
  * Restore task step
  */
-class restore_znaniumcombook_activity_structure_step extends restore_activity_structure_step {
+class restore_biblioclubrubook_activity_structure_step extends restore_activity_structure_step {
 
     /**
      * Adds support for the 'activity' path that is common to all the activities
@@ -37,7 +37,7 @@ class restore_znaniumcombook_activity_structure_step extends restore_activity_st
     protected function define_structure() {
 
         $paths = array();
-        $paths[] = new restore_path_element('znaniumcombook', '/activity/znaniumcombook');
+        $paths[] = new restore_path_element('biblioclubrubook', '/activity/biblioclubrubook');
 
         // Return the paths wrapped into standard activity structure.
         return $this->prepare_activity_structure($paths);
@@ -47,14 +47,14 @@ class restore_znaniumcombook_activity_structure_step extends restore_activity_st
      * Restores book
      * @param array|object $data
      */
-    protected function process_znaniumcombook($data) {
+    protected function process_biblioclubrubook($data) {
         global $DB;
 
         $data = (object)$data;
         $data->course = $this->get_courseid();
 
-        // Insert the znaniumcombook record.
-        $newitemid = $DB->insert_record('znaniumcombook', $data);
+        // Insert the biblioclubrubook record.
+        $newitemid = $DB->insert_record('biblioclubrubook', $data);
         // Immediately after inserting "activity" record, call this.
         $this->apply_activity_instance($newitemid);
     }
@@ -67,6 +67,6 @@ class restore_znaniumcombook_activity_structure_step extends restore_activity_st
      * overwrite in in your steps if needed
      */
     protected function after_execute() {
-        $this->add_related_files('mod_znaniumcombook', 'intro', null);
+        $this->add_related_files('mod_biblioclubrubook', 'intro', null);
     }
 }
