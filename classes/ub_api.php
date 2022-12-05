@@ -12,7 +12,7 @@ class ub_api
 	/**
 	 * @var string
 	 */
-	private static $searchurl = BASE_URL . '/services/service.php?page=all_search&m=SQuery&pjson&out=json';
+	private static $searchurl = BASE_URL . '/services/service.php?page=all_search&m=GetBooks&pjson&out=json';
 	
 	/**
 	 * @var string
@@ -54,7 +54,15 @@ class ub_api
 	 */
 	private static $onPage = 30;
 	
-	public static function buildAuthParams() 
+	private static $searchParams = [
+		'moderating' => 0,
+		'f_visible' => 1,
+		'f_no_ph_view' => 0,
+		'f_page_view' => 1,
+		'formats' => 'pdf'
+	];
+	
+	public static function buildAuthParams()
 	{
 		global $USER;
 		$domain = get_config('block_biblioclub_ru', 'domain');
@@ -114,6 +122,9 @@ class ub_api
 		// авторизуем юзера на сайте и получаем его куку
 		$url = static::$authurl . '?' . http_build_query(static::buildAuthParams(), '', '&');
 		$ch = curl_init($url);
+		// на УБО периодически отваливается сертификат
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_HEADER, 1);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
@@ -152,6 +163,8 @@ class ub_api
 		$curl = curl_init();
 		curl_setopt_array($curl, array(
 			CURLOPT_URL => $url,
+			CURLOPT_SSL_VERIFYHOST => 0,
+			CURLOPT_SSL_VERIFYPEER => 0,
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_MAXREDIRS => 10,
 			CURLOPT_TIMEOUT => static::$requestTimeout,
@@ -174,21 +187,23 @@ class ub_api
 	
 	public static function loadBooksInfo(array $booksWithIds, $cookie): array
 	{
+		$ids = array_map('intval', $booksWithIds);
 		$booksInfo = static::curlRequest(static::$booksInfo, $cookie, [
-			'ids' => array_column($booksWithIds, 'book_id')
+			'ids' => $ids,
+			'sort' => 1
 		]);
 		
 		// подгружаем библиографическое описание
 		
-		$libDescs = static::curlRequest(static::$biblioDescs, $cookie, array_column($booksWithIds, 'book_id'));
+		$libDescs = static::curlRequest(static::$biblioDescs, $cookie, $ids);
 		
 		foreach ($booksInfo as $i => $bookInfo) {
-			foreach ($booksWithIds as $item) {
-				if ($item['book_id'] == $bookInfo['id']) {
-					$booksInfo[$i]['cname'] = $item['cname'];
+			foreach ($ids as $id) {
+				if (intval($id) === intval($bookInfo['id'])) {
+					$booksInfo[$i]['cname'] = $booksInfo[$i]['name'];
 					$booksInfo[$i]['cover'] = static::$coverUrl . $bookInfo['pic'];
-					$booksInfo[$i]['biblio_record'] = $libDescs[$item['book_id']];
-					$booksInfo[$i]['biblio'] = $libDescs[$item['book_id']];
+					$booksInfo[$i]['biblio_record'] = $libDescs[$id];
+					$booksInfo[$i]['biblio'] = $libDescs[$id];
 				}
 			}
 		}
@@ -198,54 +213,48 @@ class ub_api
 	
 	public static function searchRequest(string $cookie, string $query, int $page = 0)
 	{
+		if ($page <= 0) $page = 1;
 		
 		$meta = [
-			'currentPage' => 0,
+			'currentPage' => $page,
 			'pageCount' => 0
 		];
 		
+		$jsonQuery = static::$searchParams;
 		$result = ['publications' => [], '_meta' => $meta];
 		
 		if (empty($cookie) || empty($query)) return $result;
 		
-		$jsonQuery = [
-			'psev' => 'book_names'
-		];
 		if (is_numeric($query)) {
 			// ищем по book_id коду
-			$jsonQuery['q'] = sprintf(
-				"SELECT book_id, obj, cname FROM book_names WHERE
-                       book_id = %d OR obj = %d AND moderating = 0 LIMIT 2 OPTION max_matches=900000",
-				intval($query), intval($query));
+			//FIXME: баг в уб не работает поиск по book_id!
+			$jsonQuery['book_id'] = intval($query);
 		} else {
 			// ищем по названию 
-			$jsonQuery['q'] = sprintf(
-				"SELECT book_id, obj, cname FROM book_names WHERE MATCH('@(cname) *%s*') AND moderating = 0 
-											LIMIT 3000 OPTION max_matches=900000", trim($query));
+			$jsonQuery['query'] = $query;
 		}
 		
 		$res = static::curlRequest(static::$searchurl, $cookie, $jsonQuery);
-		if (empty($res)) return $result;
-		
-		$result['_meta']['pageCount'] = ceil(count($res) / static::$onPage);
-		
-		if (count($res) <= static::$onPage) {
-			$result['publications'] = static::loadBooksInfo($res, $cookie);
-			$result['_meta']['currentPage'] = 1;
+		if (empty($res)
+			|| !isset($res['info'])
+			|| !isset($res['info']['total_found'])
+			|| $res['info']['total_found'] === 0
+			|| !isset($res['ids'])
+			|| count($res['ids']) === 0)
 			return $result;
-		}
 		
-		if ($page == 0 || $page == 1) {
-			$result['publications'] = array_slice(static::loadBooksInfo($res, $cookie), 0, static::$onPage);
-			$result['_meta']['currentPage'] = 1;
-			return $result;
-		}
+		$total = $res['info']['total_found'];
+		$totalPages = ceil($total / static::$onPage);
 		
-		$result['publications'] = array_slice(static::loadBooksInfo($res, $cookie),
-			($page - 1) * static::$onPage, static::$onPage);
-		$result['_meta']['currentPage'] = $page;
-		
+		$result['_meta']['pageCount'] = ($totalPages > 1) ? $totalPages : 1;
+		$result['publications'] = static::loadBooksInfo(
+			array_slice(
+				$res['ids'],
+				($page - 1) * static::$onPage,
+				static::$onPage),
+			$cookie);
 		return $result;
+		
 	}
 	
 	public static function getBookFields(string $cookie, int $bookId, array $fields)
@@ -307,30 +316,25 @@ class ub_api
 		if (mb_strpos($page, '-') !== false) {
 			// пользователь указал диапазон страниц
 			$pages = explode('-', $page);
-			if (count($pages) != 2) {
+			if (count($pages) != 2 || !is_numeric($pages[0]) || !is_numeric($pages[1])) {
 				// криво задан диапазон страниц, показываем всю книгу
 				$pagesArray = [
 					'from' => 1,
 					'to' => $totalBookPages
 				];
 			} else {
-				if (is_numeric($pages[0]) && is_numeric($pages[1])) {
-					// здесь - все правильно показываем только диапазон страниц
-					$pagesArray = [
-						'from' => intval($pages[0]),
-						'to' => intval($pages[1])
-					];
-				} else {
-					// снова как-то не так указан диапазон
-					$pagesArray = [
-						'from' => 1,
-						'to' => $totalBookPages
-					];
-				}
+				// здесь - все правильно показываем только диапазон страниц
+				$pagesArray = [
+					'from' => intval($pages[0]),
+					'to' => intval($pages[1])
+				];
 			}
 		}
 		
-		$userDomain = get_config('block_biblioclub_ru', 'domain');
+		$userDomain = get_config('biblioclubrubook', 'sandbox_domain_override');
+		if (empty($userDomain)) {
+			$userDomain = get_config('block_biblioclub_ru', 'domain');
+		}
 		$uid = static::getUserId($cookie);
 		if (empty($pagesArray)) return null;
 		

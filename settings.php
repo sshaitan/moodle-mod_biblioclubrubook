@@ -26,6 +26,8 @@ defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
     require_once($CFG->dirroot . '/mod/biblioclubrubook/lib.php');
+	
+	$userDomain = get_config('block_biblioclub_ru', 'domain');
 
     $settings->add(new admin_setting_heading(
         'biblioclubrubookmodeditdefaults',
@@ -57,4 +59,12 @@ if ($ADMIN->fulltree) {
         BIBLIOCLUBRUBOOK_BIBLIOGRAPHY_POSITION_BEFORE,
         $bibliographypositions
     ));
+	
+	$settings->add(new admin_setting_configtext(
+		'biblioclubrubook/sandbox_domain_override',
+		new lang_string('sandbox_domain_override', 'biblioclubrubook'),
+		'',
+		$userDomain,
+		PARAM_TEXT));
+	
 }

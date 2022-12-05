@@ -53,3 +53,4 @@ $string['mod_form_force_newpage'] = 'Force open book viewer in a new tab';
 $string['mod_newpage_loading_title'] = 'Book viewer is loading...';
 $string['mod_newpage_loading_description'] = 'To use this functionality please allow open any popups for this resource (site)';
 $string['mod_newpage_copyright'] = 'Biblioclub digital library, 2022';
+$string['sandbox_domain_override'] = 'Biblioclub sandbox domain override';
