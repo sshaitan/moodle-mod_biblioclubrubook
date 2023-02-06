@@ -57,7 +57,7 @@ class ub_api
 	private static $searchParams = [
 		'moderating' => 0,
 		'f_visible' => 1,
-		'f_no_ph_view' => 0,
+//		'f_no_ph_view' => 0,
 		'f_page_view' => 1,
 		'formats' => 'pdf'
 	];
