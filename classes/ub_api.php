@@ -42,6 +42,11 @@ class ub_api
 	/**
 	 * @var string
 	 */
+	private static $checkBookAccess = BASE_URL . '/services/service.php?page=users&m=CheckUserAccess&pjson&out=json';
+	
+	/**
+	 * @var string
+	 */
 	private static $coverUrl = 'https://img.biblioclub.ru/sm_cover/';
 	
 	/**
@@ -55,8 +60,8 @@ class ub_api
 	private static $onPage = 30;
 	
 	private static $searchParams = [
-		'moderating' => 0,
-		'f_visible' => 1,
+//		'moderating' => 0,
+//		'f_visible' => 1,
 //		'f_no_ph_view' => 0,
 		'f_page_view' => 1,
 		'formats' => 'pdf'
@@ -211,6 +216,27 @@ class ub_api
 		return $booksInfo;
 	}
 	
+	public static function detectAccess(array $booksId, string $cookie): array
+	{
+		if (empty($booksId)) return [];
+		if (empty($cookie)) return [];
+		
+		$uid = static::getUserId($cookie);
+		
+		$jsonQuery = [
+			"uid" => $uid,
+			"ids" => $booksId,
+			"tp" => "books"
+		];
+		
+		$res = static::curlRequest(static::$checkBookAccess, $cookie, $jsonQuery);
+		
+		if (!isset($res[$booksId[0]])) return [];
+		
+		return $res;
+		
+	}
+	
 	public static function searchRequest(string $cookie, string $query, int $page = 0)
 	{
 		if ($page <= 0) $page = 1;
@@ -233,8 +259,8 @@ class ub_api
 			// ищем по названию 
 			$jsonQuery['query'] = $query;
 		}
-		
 		$res = static::curlRequest(static::$searchurl, $cookie, $jsonQuery);
+
 		if (empty($res)
 			|| !isset($res['info'])
 			|| !isset($res['info']['total_found'])
@@ -243,7 +269,13 @@ class ub_api
 			|| count($res['ids']) === 0)
 			return $result;
 		
-		$total = $res['info']['total_found'];
+		$accessible = static::detectAccess($res['ids'], $cookie);
+		
+//		$total = $res['info']['total_found'];
+		
+		$res['ids'] = array_keys($accessible);
+		$total = count($res['ids']);
+		
 		$totalPages = ceil($total / static::$onPage);
 		
 		$result['_meta']['pageCount'] = ($totalPages > 1) ? $totalPages : 1;
@@ -275,8 +307,15 @@ class ub_api
 	public static function getUserId(string $cookie)
 	{
 		if (empty($cookie)) return null;
+		if (isset($_SESSION['mod_biblioclubrubook_auth']['b_uid']) &&
+			!empty($_SESSION['mod_biblioclubrubook_auth']['b_uid']) &&
+			$_SESSION['mod_biblioclubrubook_auth']['b_uid'] > 0) {
+			return $_SESSION['mod_biblioclubrubook_auth']['b_uid'];
+		}
+		
 		$res = static::curlRequest(self::$me, $cookie);
 		if (empty($res) || empty($res['data'])) return null;
+		$_SESSION['mod_biblioclubrubook_auth']['b_uid'] = $res['data']; 
 		return $res['data'];
 		
 	}
