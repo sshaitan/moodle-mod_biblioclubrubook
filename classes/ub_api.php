@@ -230,14 +230,15 @@ class ub_api
 		];
 		
 		$res = static::curlRequest(static::$checkBookAccess, $cookie, $jsonQuery);
-		
 		if (!isset($res[$booksId[0]])) return [];
 		
-		return $res;
+		return array_filter($res, function ($value) {
+			return intval($value) === 1;
+		});
 		
 	}
 	
-	public static function searchRequest(string $cookie, string $query, int $page = 0)
+	public static function searchRequest(string $cookie, string $query, int $page = 0): array
 	{
 		if ($page <= 0) $page = 1;
 		
