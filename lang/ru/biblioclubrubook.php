@@ -51,5 +51,5 @@ $string['mod_form_show_cover'] = 'Отображать обложку книги
 $string['mod_form_force_newpage'] = 'Принудительное открытие просмотра в новом окне';
 $string['mod_newpage_loading_title'] = 'Книга загружается...';
 $string['mod_newpage_loading_description'] = 'Пожалуйста разрешите всплывающие окна на данном ресурсе (сайте).';
-$string['mod_newpage_copyright'] = 'Университетская библиотека он-лайн, 2022';
+$string['mod_newpage_copyright'] = 'Университетская библиотека он-лайн, 2024';
 $string['sandbox_domain_override'] = 'Домен песочницы';

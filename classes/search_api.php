@@ -30,6 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
 require_once($CFG->libdir . '/filelib.php');
+require_once($CFG->dirroot . '/lib/externallib.php');
 require_once("$CFG->dirroot/mod/biblioclubrubook/classes/ub_api.php");
 /**
  * Search api class
