@@ -81,7 +81,7 @@ class ub_api
 			$login .= '_' . $sub_id;
 		}
 		$params = [
-			'page' => 'main_ub_red',
+			'page' => 'main',
 			'action' => 'auth_for_org',
 			'domain' => $domain,
 			'user_id' => $user_id,
@@ -115,9 +115,11 @@ class ub_api
 				!empty($_SESSION['mod_biblioclubrubook_auth']['expires'])) {
 				// проверяем срок жизни
 				if ($_SESSION['mod_biblioclubrubook_auth']['expires'] > $now->format('Y-m-d H:i:s')) {
-					// проверяем наличие куки
+					// проверяем наличие куки и параметров fingerprint-сессии
 					if (isset($_SESSION['mod_biblioclubrubook_auth']['cookie']) &&
-						!empty($_SESSION['mod_biblioclubrubook_auth']['cookie'])) {
+						!empty($_SESSION['mod_biblioclubrubook_auth']['cookie']) &&
+						!empty($_SESSION['mod_biblioclubrubook_auth']['fingerprint']) &&
+						!empty($_SESSION['mod_biblioclubrubook_auth']['useragent'])) {
 						// возвращаем куку из сессии
 						return $_SESSION['mod_biblioclubrubook_auth']['cookie'];
 					}
@@ -126,59 +128,65 @@ class ub_api
 		}
 		// авторизуем юзера на сайте и получаем его куку
 		$url = static::$authurl . '?' . http_build_query(static::buildAuthParams(), '', '&');
+		$fingerprint = bin2hex(random_bytes(32));
+		$useragent = 'Moodle Biblioclub plugin';
 		$ch = curl_init($url);
-		// на УБО периодически отваливается сертификат
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_HEADER, 1);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+		curl_setopt($ch, CURLOPT_TIMEOUT, static::$requestTimeout);
+		curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Sign: ' . $fingerprint]);
 		$result = curl_exec($ch);
-		preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $result, $matches);
+		curl_close($ch);
+
+		preg_match_all('/^Set-Cookie:\s*([^=;\s]+)=([^;]*)/mi', (string)$result, $matches, PREG_SET_ORDER);
 		$cookies = [];
-		foreach ($matches[1] as $item) {
-			parse_str($item, $cookie);
-			if (isset($cookie['PHPSESSID']) && !empty($cookie['PHPSESSID'])) {
-				// куча редиректов - читаем все куки
-				$cookies[] = $cookie;
+		foreach ($matches as $match) {
+			if (in_array($match[1], ['uinfo', 'u_tm'], true) && $match[2] !== '') {
+				$cookies[$match[1]] = $match[2];
 			}
-			
 		}
-		
-		// нужная кука где-то посередине))
-		if (count($cookies) >= 2) {
-			$authCookie = $cookies[1]['PHPSESSID'];
-			if (!empty($authCookie)) {
-				// срок сессии на библиоклубе 12 часов (по максимуму)
-				// запишем куку в сессию юзеру, чтобы потом ее оттуда достать
-				$expires = new \DateTime("now", new \DateTimeZone('Europe/Moscow'));
-				$expires->modify("+6 hours");
-				$_SESSION['mod_biblioclubrubook_auth'] = [
-					'expires' => $expires->format('Y-m-d H:i:s'),
-					'cookie' => $authCookie
-				];
-				return $authCookie;
-			}
+
+		if (!empty($cookies['uinfo'])) {
+			$authCookie = implode('; ', array_map(function($name, $value) {
+				return $name . '=' . $value;
+			}, array_keys($cookies), $cookies));
+			$expires = new \DateTime("now", new \DateTimeZone('Europe/Moscow'));
+			$expires->modify("+6 hours");
+			$_SESSION['mod_biblioclubrubook_auth'] = [
+				'expires' => $expires->format('Y-m-d H:i:s'),
+				'cookie' => $authCookie,
+				'fingerprint' => $fingerprint,
+				'useragent' => $useragent
+			];
+			return $authCookie;
 		}
 		return null;
 	}
 	
 	public static function curlRequest(string $url, string $cookie, $jsonQuery = null)
 	{
+		$fingerprint = $_SESSION['mod_biblioclubrubook_auth']['fingerprint'] ?? '';
+		$useragent = $_SESSION['mod_biblioclubrubook_auth']['useragent'] ?? 'Moodle Biblioclub plugin';
 		$curl = curl_init();
 		curl_setopt_array($curl, array(
 			CURLOPT_URL => $url,
-			CURLOPT_SSL_VERIFYHOST => 0,
-			CURLOPT_SSL_VERIFYPEER => 0,
+			CURLOPT_SSL_VERIFYHOST => 2,
+			CURLOPT_SSL_VERIFYPEER => 1,
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_MAXREDIRS => 10,
 			CURLOPT_TIMEOUT => static::$requestTimeout,
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_CUSTOMREQUEST => (empty($jsonQuery)) ? 'GET' : 'POST',
 			CURLOPT_POSTFIELDS => (empty($jsonQuery)) ? null : 'p=' . json_encode($jsonQuery),
+			CURLOPT_USERAGENT => $useragent,
 			CURLOPT_HTTPHEADER => array(
 				'Content-Type: application/x-www-form-urlencoded',
-				'Cookie: PHPSESSID=' . $cookie
+				'Cookie: ' . $cookie,
+				'X-Sign: ' . $fingerprint
 			),
 		));
 		$response = curl_exec($curl);
@@ -391,4 +399,3 @@ class ub_api
 	}
 	
 }
-
