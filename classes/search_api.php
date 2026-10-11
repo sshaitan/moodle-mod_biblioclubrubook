@@ -31,7 +31,6 @@ global $CFG;
 
 require_once($CFG->libdir . '/filelib.php');
 require_once($CFG->dirroot . '/lib/externallib.php');
-require_once("$CFG->dirroot/mod/biblioclubrubook/classes/ub_api.php");
 /**
  * Search api class
  */
@@ -71,9 +70,9 @@ class search_api extends \external_api
 	 */
 	public static function search_books($searchquery, $page = 0)
 	{
-		$cookie = \ub_api::get_auth_cookie();
+		$cookie = ub_api::get_auth_cookie();
 		
-		return \ub_api::searchRequest($cookie, $searchquery, $page);
+		return ub_api::searchRequest($cookie ?? '', $searchquery, $page);
 		
 	}
 	

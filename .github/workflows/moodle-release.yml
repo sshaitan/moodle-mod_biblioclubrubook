@@ -1,16 +1,12 @@
 #
-# Whenever a new tag starting with "v" is pushed, add the tagged version
-# to the Moodle Plugins directory at https://moodle.org/plugins
+# Submit a version to the Moodle Plugins directory only on explicit manual dispatch.
+# GitHub releases/tags do not submit versions automatically.
 #
 # revision: 2021070201
 #
 name: Releasing in the Plugins directory
 
 on:
-  push:
-    tags:
-      - v*
-
   workflow_dispatch:
     inputs:
       tag:

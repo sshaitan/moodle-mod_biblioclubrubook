@@ -1,48 +1,77 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-const BASE_URL = 'https://biblioclub.ru';
+/**
+ * Client for the Biblioclub API.
+ *
+ * @package mod_biblioclubrubook
+ * @copyright 2022 Pavel Lobanov
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+namespace mod_biblioclubrubook;
 
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Biblioclub authentication, search and book access client.
+ */
 class ub_api
 {
+	/** @var string Base URL of the external service. */
+	const BASE_URL = 'https://biblioclub.ru';
+
 	/**
 	 * @var string
 	 */
-	public static $authurl = BASE_URL . '/index.php';
+	public static $authurl = self::BASE_URL . '/index.php';
 	
 	/**
 	 * @var string
 	 */
-	private static $searchurl = BASE_URL . '/services/service.php?page=all_search&m=GetBooks&pjson&out=json';
+	private static $searchurl = self::BASE_URL . '/services/service.php?page=all_search&m=GetBooks&pjson&out=json';
 	
 	/**
 	 * @var string
 	 */
-	private static $booksInfo = BASE_URL . '/services/service.php?page=books&m=GetShortInfo_S&pjson&out=json';
+	private static $booksInfo = self::BASE_URL . '/services/service.php?page=books&m=GetShortInfo_S&pjson&out=json';
 	
 	/**
 	 * @var string
 	 */
-	private static $bookFields = BASE_URL . '/services/service.php?page=books&m=GetFields_S&pjson&out=json';
+	private static $bookFields = self::BASE_URL . '/services/service.php?page=books&m=GetFields_S&pjson&out=json';
 	
 	/**
 	 * @var string
 	 */
-	private static $biblioDescs = BASE_URL . '/services/service.php?page=books&m=GetLibDescs&pjson&out=json';
+	private static $biblioDescs = self::BASE_URL . '/services/service.php?page=books&m=GetLibDescs&pjson&out=json';
 	
 	/**
 	 * @var string
 	 */
-	private static $me = BASE_URL . '/services/users.php?users_action=check_auth';
+	private static $me = self::BASE_URL . '/services/users.php?users_action=check_auth';
 	
 	/**
 	 * @var string
 	 */
-	private static $viewLinks = BASE_URL . '/services/service.php?page=sandbox&m=FormOutCodes&pjson&out=json';
+	private static $viewLinks = self::BASE_URL . '/services/service.php?page=sandbox&m=FormOutCodes&pjson&out=json';
 	
 	/**
 	 * @var string
 	 */
-	private static $checkBookAccess = BASE_URL . '/services/service.php?page=users&m=CheckUserAccess&pjson&out=json';
+	private static $checkBookAccess = self::BASE_URL . '/services/service.php?page=users&m=CheckUserAccess&pjson&out=json';
 	
 	/**
 	 * @var string
@@ -130,17 +159,19 @@ class ub_api
 		$url = static::$authurl . '?' . http_build_query(static::buildAuthParams(), '', '&');
 		$fingerprint = bin2hex(random_bytes(32));
 		$useragent = 'Moodle Biblioclub plugin';
-		$ch = curl_init($url);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_HEADER, 1);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
-		curl_setopt($ch, CURLOPT_TIMEOUT, static::$requestTimeout);
-		curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Sign: ' . $fingerprint]);
-		$result = curl_exec($ch);
-		curl_close($ch);
+		$curl = static::create_http_client();
+		$curl->setHeader(['X-Sign: ' . $fingerprint]);
+		$result = $curl->get($url, [], [
+			'CURLOPT_SSL_VERIFYHOST' => 2,
+			'CURLOPT_SSL_VERIFYPEER' => true,
+			'CURLOPT_HEADER' => true,
+			'CURLOPT_FOLLOWLOCATION' => false,
+			'CURLOPT_TIMEOUT' => static::$requestTimeout,
+			'CURLOPT_USERAGENT' => $useragent,
+		]);
+		if ($curl->get_errno()) {
+			return null;
+		}
 
 		preg_match_all('/^Set-Cookie:\s*([^=;\s]+)=([^;]*)/mi', (string)$result, $matches, PREG_SET_ORDER);
 		$cookies = [];
@@ -171,31 +202,44 @@ class ub_api
 	{
 		$fingerprint = $_SESSION['mod_biblioclubrubook_auth']['fingerprint'] ?? '';
 		$useragent = $_SESSION['mod_biblioclubrubook_auth']['useragent'] ?? 'Moodle Biblioclub plugin';
-		$curl = curl_init();
-		curl_setopt_array($curl, array(
-			CURLOPT_URL => $url,
-			CURLOPT_SSL_VERIFYHOST => 2,
-			CURLOPT_SSL_VERIFYPEER => 1,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_MAXREDIRS => 10,
-			CURLOPT_TIMEOUT => static::$requestTimeout,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_CUSTOMREQUEST => (empty($jsonQuery)) ? 'GET' : 'POST',
-			CURLOPT_POSTFIELDS => (empty($jsonQuery)) ? null : 'p=' . json_encode($jsonQuery),
-			CURLOPT_USERAGENT => $useragent,
-			CURLOPT_HTTPHEADER => array(
-				'Content-Type: application/x-www-form-urlencoded',
-				'Cookie: ' . $cookie,
-				'X-Sign: ' . $fingerprint
-			),
-		));
-		$response = curl_exec($curl);
-		curl_close($curl);
+		$curl = static::create_http_client();
+		$curl->setHeader([
+			'Content-Type: application/x-www-form-urlencoded',
+			'Cookie: ' . $cookie,
+			'X-Sign: ' . $fingerprint,
+		]);
+		$options = array(
+			'CURLOPT_SSL_VERIFYHOST' => 2,
+			'CURLOPT_SSL_VERIFYPEER' => true,
+			'CURLOPT_MAXREDIRS' => 10,
+			'CURLOPT_TIMEOUT' => static::$requestTimeout,
+			'CURLOPT_FOLLOWLOCATION' => true,
+			'CURLOPT_USERAGENT' => $useragent,
+		);
+		if (empty($jsonQuery)) {
+			$response = $curl->get($url, [], $options);
+		} else {
+			$postdata = http_build_query(['p' => json_encode($jsonQuery)], '', '&');
+			$response = $curl->post($url, $postdata, $options);
+		}
+		if ($curl->get_errno()) return [];
 		if (empty($response)) return [];
 		if (is_numeric($response)) return ['data' => $response];
 		if (trim($response) === 'false') return ['data' => trim($response)];
-		return json_decode($response, true);
+		$decoded = json_decode($response, true);
+		return is_array($decoded) ? $decoded : [];
 		
+	}
+
+	/**
+	 * Use Moodle's HTTP client so proxy settings and URL security rules apply.
+	 *
+	 * @return \curl
+	 */
+	protected static function create_http_client() {
+		global $CFG;
+		require_once($CFG->libdir . '/filelib.php');
+		return new \curl();
 	}
 	
 	public static function loadBooksInfo(array $booksWithIds, $cookie): array

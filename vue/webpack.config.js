@@ -61,8 +61,8 @@ module.exports = (env, options) => {
             'core/ajax': {
                 amd: 'core/ajax',
             },
-            'core/modal_factory': {
-                amd: 'core/modal_factory',
+            'core/modal_cancel': {
+                amd: 'core/modal_cancel',
             },
             'core/modal_events': {
                 amd: 'core/modal_events',

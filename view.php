@@ -23,19 +23,11 @@
  */
 
 
+use mod_biblioclubrubook\ub_api;
+
 require('../../config.php');
 require_once("$CFG->dirroot/mod/biblioclubrubook/lib.php");
 require_once("$CFG->dirroot/mod/biblioclubrubook/locallib.php");
-require_once("$CFG->dirroot/mod/biblioclubrubook/classes/ub_api.php");
-
-function error_redirect_handler($bookId){
-	
-	$url = new moodle_url(\ub_api::$authurl, [
-		'page' => 'book_red',
-		'id' => intval($bookId)
-	]);
-	redirect($url);
-}
 
 $id = required_param('id', PARAM_INT); // Course module ID.
 $forceview = optional_param('forceview', 0, PARAM_BOOL);
@@ -62,17 +54,17 @@ if ($book->bookpage) {
 }
 
 // подгружаем ссылки на просмотр
-$cookie = \ub_api::get_auth_cookie();
+$cookie = ub_api::get_auth_cookie();
 if (empty($cookie)) {
 	// что-то не так с аутентификацией
-	error_redirect_handler($book->bookid);
+	biblioclubrubook_error_redirect_handler($book->bookid);
 }
 
-$ub_links = \ub_api::getLinks($cookie, $book->bookid, $book->bookpage);
+$ub_links = ub_api::getLinks($cookie, $book->bookid, $book->bookpage);
 
 if (empty($ub_links)){
 	// не удалось получить ссылки
-	error_redirect_handler($book->bookid);
+	biblioclubrubook_error_redirect_handler($book->bookid);
 }
 
 if (!course_get_format($course)->has_view_page()) {

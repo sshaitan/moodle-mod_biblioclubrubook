@@ -26,10 +26,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_biblioclubrubook';  // Full name of the plugin.
-$plugin->version = 2026091400; // The current module version (Date: YYYYMMDDXX)
-$plugin->requires = 2016120500; // Requires Moodle 3.2.
+$plugin->version = 2026101200; // The current module version (Date: YYYYMMDDXX)
+$plugin->requires = 2018051703; // Requires Moodle 3.5.3 (Privacy user-list API).
 $plugin->maturity = MATURITY_STABLE; // Maturity level of this plugin version.
-$plugin->release = '2026-09-14'; // Human readable version name.
+$plugin->release = '1.10'; // Human readable version name.
 $plugin->dependencies = array(
-    'block_biblioclub_ru' => 2020083102,
+    'block_biblioclub_ru' => 2026101200,
 );

@@ -22,7 +22,7 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import ModalFactory from 'core/modal_factory';
+import ModalCancel from 'core/modal_cancel';
 import ModalEvents from 'core/modal_events';
 import Vue from 'vue';
 import BookPickerModalBody from './book_picker_modal_body';
@@ -34,11 +34,21 @@ export default class BookPickerModal {
     }
 
     async show(onHideCallback) {
-        this.modal = await ModalFactory.create({
-            type: ModalFactory.types.CANCEL,
+        const options = {
             title: this.parentVue.strings.modal_title,
             body: '',
-        });
+        };
+        if (typeof ModalCancel.create === 'function') {
+            // Moodle 4.3+: use the modal class directly (the factory was removed in 5.2).
+            this.modal = await ModalCancel.create(options);
+        } else {
+            // Older Moodle: load the legacy factory only when it is actually needed.
+            this.modal = await new Promise((resolve, reject) => {
+                window.require(['core/modal_factory'], function(factory) {
+                    factory.create(Object.assign({type: factory.types.CANCEL}, options)).then(resolve, reject);
+                }, reject);
+            });
+        }
 
         this.modal.setLarge();
 

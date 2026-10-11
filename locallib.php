@@ -25,6 +25,20 @@
 defined('MOODLE_INTERNAL') || die;
 
 /**
+ * Redirect to the book page when the API cannot return a reader link.
+ *
+ * @param int $bookid Biblioclub book ID.
+ * @return void
+ */
+function biblioclubrubook_error_redirect_handler($bookid) {
+    $url = new moodle_url(\mod_biblioclubrubook\ub_api::$authurl, [
+        'page' => 'book_red',
+        'id' => (int) $bookid,
+    ]);
+    redirect($url);
+}
+
+/**
  * Print biblioclubrubook info and workaround link when JS not available.
  * @param object $book
  * @param object $cm
