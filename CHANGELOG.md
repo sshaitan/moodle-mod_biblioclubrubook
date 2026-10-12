@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-12 - v1.11
+
+- Fix the Moodle Plugins Directory `moodle-plugin-ci validate` failure: add the
+  required English `biblioclubrubook:addinstance` capability description.
+- Supply English and Russian names for both declared capabilities (`addinstance`
+  and `view`); add a regression test covering every capability in both languages.
+- Add a read-only GitHub Actions structure-validation job using the pinned
+  Moodle Plugin CI 4.5.11 validator and Moodle 5.2.2 checkout, without a database
+  or external EBS credentials. No automatic directory submission is performed.
+- No changes to book/authentication logic, database schema or block dependency.
+
 ## 2026-10-12 - v1.10
 
 - Addressed Moodle review #2: replace direct cURL calls with Moodle's HTTP client;

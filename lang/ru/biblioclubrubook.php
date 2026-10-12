@@ -23,6 +23,8 @@
  */
 
 
+$string['biblioclubrubook:addinstance'] = 'Добавлять книги из ЭБС Университетская библиотека онлайн';
+$string['biblioclubrubook:view'] = 'Просматривать книги из ЭБС Университетская библиотека онлайн';
 $string['clicktoopen'] = 'Перейти';
 $string['cover_alt'] = 'Обложка';
 $string['mod_form_bibliography_position'] = 'Положение библиографического описания';

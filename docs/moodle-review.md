@@ -1,9 +1,37 @@
-# Moodle Plugins Directory review follow-up — v1.10
+# Moodle Plugins Directory review follow-up — v1.11
 
-Version: `2026101200`, release `1.10`, tag `v1.10` (12 October 2026).
+Version: `2026101201`, release `1.11`, tag `v1.11` (12 October 2026).
 Requires Moodle 3.5.3 (`2018051703`) and block_biblioclub_ru v0.0.7 (`2026101200`).
 Install/update the block first, then update the module and run Moodle's upgrade.
 Existing organisation settings and course book resources are retained.
+
+## Automated directory validation follow-up
+
+The submitted v1.10 ZIP failed `moodle-plugin-ci validate`: its English language
+file did not contain `biblioclubrubook:addinstance`, although the capability was
+declared in `db/access.php`. The failure was reproduced with the official Moodle
+Plugin CI 4.5.11 validator (exit 1). Release v1.11 supplies English and Russian
+names for both `addinstance` and `view`; the same validator passes (exit 0).
+A regression test checks every declared capability against both language files.
+The combined plugin PHPUnit suite was rerun on Moodle 5.2.2 / PHP 8.4.25 /
+PostgreSQL 16.13: **19 tests / 91 assertions**, all passing, without warnings.
+The module upgrade, lint of all 28 PHP files and both offline JS cases also pass.
+Live EBS/browser checks listed below were performed for v1.10; v1.11 does not
+change authentication, HTTP or book-picker logic and made no new EBS requests.
+
+The new `.github/workflows/validate.yml` runs that structure check on pushes and
+pull requests. It uses a pinned Moodle 5.2.2 checkout and a static-validation-only
+config fixture: no database installation, EBS requests or credentials are needed.
+The fixture deliberately refuses normal Moodle bootstrap. This check does not
+replace runtime tests, all directory checks or moderator approval.
+
+To repeat against a development Moodle checkout and a downloaded official PHAR:
+
+```bash
+php /path/to/moodle-plugin-ci.phar validate --moodle=/path/to/moodle /path/to/biblioclubrubook
+```
+
+See the [official validator documentation](https://moodlehq.github.io/moodle-plugin-ci/CLI.html#validate).
 
 ## Findings addressed
 
@@ -62,7 +90,11 @@ the shipped bundles were rebuilt with Node 16.20.2: `cd vue && npm ci --ignore-s
 
 ## Suggested resubmission message
 
-> Please review mod_biblioclubrubook v1.10 together with block_biblioclub_ru v0.0.7.
+> Please review mod_biblioclubrubook v1.11 together with block_biblioclub_ru v0.0.7.
+> The v1.10 automated validation failure (missing biblioclubrubook:addinstance
+> English string) is fixed. Both declared capabilities now have English and
+> Russian descriptions, covered by a regression test. The official
+> moodle-plugin-ci 4.5.11 validate command passes locally.
 > Module findings #2–#5 have been addressed: Moodle curl, external-data Privacy API,
 > the prefixed locallib handler and the namespaced/autoloaded API class.
 > Automated tests and live verification are documented in the repository.

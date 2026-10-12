@@ -24,6 +24,8 @@
 
 
 
+$string['biblioclubrubook:addinstance'] = 'Add a new book from Biblioclub DL';
+$string['biblioclubrubook:view'] = 'View a book from Biblioclub DL';
 $string['clicktoopen'] = 'Go';
 $string['cover_alt'] = 'Cover';
 $string['mod_form_bibliography_position'] = 'Bibliography position';

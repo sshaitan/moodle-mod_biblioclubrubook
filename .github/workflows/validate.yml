@@ -1,0 +1,43 @@
+name: Plugin structure validation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out plugin
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: plugin
+      - name: Check out Moodle
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: moodle/moodle
+          ref: v5.2.2
+          path: moodle
+      - name: Set up PHP
+        uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # v2
+        with:
+          php-version: '8.4'
+          extensions: curl, mbstring, xml, zip
+          coverage: none
+      - name: Download pinned official validator
+        run: |
+          curl --fail --silent --show-error --location \
+            https://github.com/moodlehq/moodle-plugin-ci/releases/download/4.5.11/moodle-plugin-ci.phar \
+            --output moodle-plugin-ci.phar
+          echo '39b5d0d71f5ab88fac1c3f5fc1166b8673bc0a488b29cd8c56a8bca56a8f8bca  moodle-plugin-ci.phar' | sha256sum --check
+      - name: Prepare static-validation-only configuration
+        run: |
+          mkdir -p /tmp/biblioclub-structure-validation
+          cp plugin/tests/fixtures/validation_config.php moodle/config.php
+      - name: Validate plugin structure
+        run: php moodle-plugin-ci.phar validate --moodle=moodle plugin
